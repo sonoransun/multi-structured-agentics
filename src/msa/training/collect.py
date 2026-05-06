@@ -55,8 +55,13 @@ class TraceCollector:
         score: float,
         trace: Trace | None,
         error: str | None = None,
+        judge_score: float | None = None,
+        cost_usd: float | None = None,
+        backend: str | None = None,
+        candidate_id: str | None = None,
+        dataset: str | None = None,
     ) -> None:
-        row = {
+        row: dict[str, Any] = {
             "task_id": task_id,
             "kind": kind,
             "prompt": prompt,
@@ -73,11 +78,25 @@ class TraceCollector:
                     "tokens_in": s.tokens_in,
                     "tokens_out": s.tokens_out,
                     "note": s.note,
+                    "cost_usd": s.cost_usd,
+                    "judge_score": s.judge_score,
                 }
                 for s in (trace.spans if trace else [])
             ],
             "error": error,
         }
+        if judge_score is not None:
+            row["judge_score"] = judge_score
+        if cost_usd is not None:
+            row["cost_usd"] = cost_usd
+        elif trace is not None:
+            row["cost_usd"] = trace.cost_usd
+        if backend is not None:
+            row["backend"] = backend
+        if candidate_id is not None:
+            row["candidate_id"] = candidate_id
+        if dataset is not None:
+            row["dataset"] = dataset
         self._fh.write(json.dumps(row) + "\n")
         self._fh.flush()
 

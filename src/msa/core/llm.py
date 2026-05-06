@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Callable
 
 from ..backends import (
     Backend,
@@ -11,6 +12,7 @@ from ..backends import (
     StubBackend,
     TransformersBackend,
 )
+from ..backends.base import ToolCall
 
 DEFAULT_MODEL = "claude-opus-4-7"
 
@@ -23,6 +25,9 @@ class LLMResponse:
     tokens_out: int
     cache_read_tokens: int = 0
     backend: str = ""
+    cost_usd: float = 0.0
+    tool_calls: list[ToolCall] = field(default_factory=list)
+    stop_reason: str = ""
 
 
 class LLM:
@@ -79,9 +84,25 @@ class LLM:
         system: str = "",
         max_tokens: int = 4096,
         cache_system: bool = True,
+        tools: list[dict] | None = None,
+        stream_callback: Callable[[str], None] | None = None,
     ) -> LLMResponse:
         r: Response = self.backend.complete(
-            prompt, system=system, max_tokens=max_tokens, cache_system=cache_system
+            prompt,
+            system=system,
+            max_tokens=max_tokens,
+            cache_system=cache_system,
+            tools=tools,
+            stream_callback=stream_callback,
+        )
+        from .pricing import estimate_cost
+
+        cost = estimate_cost(
+            backend=r.backend,
+            model=self.model,
+            tokens_in=r.tokens_in,
+            tokens_out=r.tokens_out,
+            cache_read_tokens=r.cache_read_tokens,
         )
         return LLMResponse(
             text=r.text,
@@ -89,4 +110,7 @@ class LLM:
             tokens_out=r.tokens_out,
             cache_read_tokens=r.cache_read_tokens,
             backend=r.backend,
+            cost_usd=cost,
+            tool_calls=list(r.tool_calls),
+            stop_reason=r.stop_reason,
         )

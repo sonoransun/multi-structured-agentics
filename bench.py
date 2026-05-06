@@ -43,6 +43,30 @@ def main() -> int:
         default=None,
         help="select router (also via MSA_ROUTER env)",
     )
+    p.add_argument(
+        "--tasks",
+        choices=["synthetic", "gsm8k", "humaneval"],
+        default="synthetic",
+        help="task source",
+    )
+    p.add_argument("--n-tasks", type=int, default=None, help="cap on number of tasks loaded")
+    p.add_argument(
+        "--include-adversarial",
+        action="store_true",
+        help="append adversarial_tasks.ADVERSARIAL_TASKS to the synthetic suite",
+    )
+    p.add_argument(
+        "--backends",
+        default=None,
+        help="comma-separated backends for backend_pareto method (e.g. stub,claude)",
+    )
+    p.add_argument(
+        "--self-improve",
+        type=int,
+        default=0,
+        metavar="N",
+        help="run N rounds of collect→train→bench self-improvement",
+    )
     args = p.parse_args()
 
     if args.backend != "auto":
@@ -55,6 +79,25 @@ def main() -> int:
         f"backend={llm.backend.name}  router={os.environ.get('MSA_ROUTER', 'keyword')}"
     )
 
+    tasks = _load_tasks(args)
+
+    if args.self_improve:
+        from bench_loop import run_self_improve
+
+        reports = run_self_improve(args.self_improve, llm=llm, tasks=tasks)
+        results = {"loop": [r.__dict__ for r in reports]}
+        if args.json:
+            print(json.dumps({"runtime": runtime, "results": results}, indent=2, default=str))
+        else:
+            print(f"== msa self-improve — {runtime} ==\n")
+            for r in reports:
+                print(
+                    f"  iter={r.iter} synergy_delta={r.synergy_mean_delta:+.3f} "
+                    f"vs_prev={r.synergy_delta_vs_prev:+.3f} "
+                    f"router_skipped={r.router_skipped} bandit_skipped={r.bandit_skipped}"
+                )
+        return 0
+
     collector_ctx = (
         TraceCollector(path=args.data_dir + "/run.jsonl" if args.data_dir else None)
         if args.collect
@@ -65,7 +108,10 @@ def main() -> int:
     results: dict[str, dict] = {}
     try:
         for name in methods:
-            results[name] = METHODS[name](TASKS, llm=llm, collector=collector_ctx)
+            kw: dict = {"llm": llm, "collector": collector_ctx}
+            if name == "backend_pareto" and args.backends:
+                kw["backends"] = [b.strip() for b in args.backends.split(",") if b.strip()]
+            results[name] = METHODS[name](tasks, **kw)
     finally:
         if collector_ctx is not None:
             collector_ctx.close()
@@ -81,6 +127,29 @@ def main() -> int:
         _print_result(name, res)
         print()
     return 0
+
+
+def _load_tasks(args) -> list:
+    if args.tasks == "synthetic":
+        if args.include_adversarial:
+            try:
+                from benchmarks.adversarial_tasks import ADVERSARIAL_TASKS
+                tasks = list(TASKS) + list(ADVERSARIAL_TASKS)
+            except ImportError:
+                tasks = list(TASKS)
+        else:
+            tasks = list(TASKS)
+    elif args.tasks == "gsm8k":
+        from benchmarks.datasets.gsm8k import load
+        tasks = load(n=args.n_tasks or 20)
+    elif args.tasks == "humaneval":
+        from benchmarks.datasets.humaneval import load
+        tasks = load(n=args.n_tasks or 20)
+    else:
+        tasks = list(TASKS)
+    if args.n_tasks is not None:
+        tasks = tasks[: args.n_tasks]
+    return tasks
 
 
 def _print_result(name: str, res: dict) -> None:
@@ -111,6 +180,8 @@ def _print_result(name: str, res: dict) -> None:
             print(f"  {kind:14s}  {a:>10.2f}   {s:>10.2f}   {i:>10.2f}")
         for note in res["interpretation"]:
             print(f"  - {note}")
+    elif name in ("judged_suite", "pareto", "backend_pareto", "counterfactual"):
+        print(json.dumps(res, indent=2, default=str))
 
 
 if __name__ == "__main__":

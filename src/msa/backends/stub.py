@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from typing import Callable
 
 from .base import Backend, Response
 
@@ -26,6 +27,8 @@ class StubBackend(Backend):
         system: str = "",
         max_tokens: int = 4096,
         cache_system: bool = True,
+        tools: list[dict] | None = None,
+        stream_callback: Callable[[str], None] | None = None,
     ) -> Response:
         h = hashlib.sha256((system + "\n---\n" + prompt).encode()).hexdigest()[:12]
         lower = prompt.lower()
@@ -39,9 +42,19 @@ class StubBackend(Backend):
         else:
             text = f"[stub {h}] {prompt[:120]}"
 
+        if stream_callback is not None:
+            words = text.split(" ")
+            chunk_size = max(1, len(words) // 4)
+            for i in range(0, len(words), chunk_size):
+                chunk = " ".join(words[i:i + chunk_size])
+                if i + chunk_size < len(words):
+                    chunk += " "
+                stream_callback(chunk)
+
         return Response(
             text=text,
             tokens_in=len((system + prompt).split()),
             tokens_out=len(text.split()),
             backend=self.name,
+            stop_reason="end_turn",
         )

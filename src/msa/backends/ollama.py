@@ -4,6 +4,7 @@ import json
 import os
 import urllib.error
 import urllib.request
+from typing import Callable
 
 from .base import Backend, Response
 
@@ -47,6 +48,8 @@ class OllamaBackend(Backend):
         system: str = "",
         max_tokens: int = 4096,
         cache_system: bool = True,
+        tools: list[dict] | None = None,
+        stream_callback: Callable[[str], None] | None = None,
     ) -> Response:
         if not self.available:
             raise RuntimeError(f"OllamaBackend unavailable — no daemon at {self.host}")

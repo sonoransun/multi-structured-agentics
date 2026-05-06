@@ -1,0 +1,111 @@
+# ─── Python: bytecode, builds, packaging ──────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+pip-wheel-metadata/
+.installed.cfg
+MANIFEST
+
+# ─── Python: virtual environments ─────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# ─── Python: test, coverage, lint caches ──────────────────────────
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.hypothesis/
+
+# ─── Project: training data (preserve dir scaffolding) ────────────
+data/runs/*
+!data/runs/.gitkeep
+data/raw/
+data/interim/
+data/processed/
+
+# ─── Project: model artifacts (preserve dir scaffolding) ──────────
+models/*
+!models/.gitkeep
+
+# ─── Project: benchmarks output ───────────────────────────────────
+.benchmarks/
+
+# ─── ML / DS: framework caches & experiment trackers ──────────────
+.huggingface/
+.cache/
+wandb/
+mlruns/
+lightning_logs/
+tensorboard/
+/runs/
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+*.tflite
+.ipynb_checkpoints/
+*.ipynb_meta
+
+# ─── Secrets & local config ───────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# ─── Claude Code: per-developer settings ──────────────────────────
+.claude/settings.local.json
+
+# ─── Editors: VS Code ─────────────────────────────────────────────
+.vscode/
+*.code-workspace
+
+# ─── Editors: JetBrains ───────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# ─── Editors: vim / emacs / sublime ───────────────────────────────
+*.swp
+*.swo
+*~
+.#*
+\#*\#
+*.sublime-project
+*.sublime-workspace
+
+# ─── OS: macOS / Windows / Linux ──────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+.fuse_hidden*
+.Trash-*

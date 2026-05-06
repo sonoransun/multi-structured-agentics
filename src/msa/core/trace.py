@@ -13,6 +13,8 @@ class Span:
     tokens_in: int = 0
     tokens_out: int = 0
     note: str = ""
+    cost_usd: float = 0.0
+    judge_score: float = 0.0
 
     @property
     def duration_s(self) -> float:
@@ -34,11 +36,21 @@ class Trace:
         self.spans.append(s)
         return s
 
-    def close(self, span: Span, tokens_in: int = 0, tokens_out: int = 0, note: str = "") -> None:
+    def close(
+        self,
+        span: Span,
+        tokens_in: int = 0,
+        tokens_out: int = 0,
+        note: str = "",
+        cost_usd: float = 0.0,
+        judge_score: float = 0.0,
+    ) -> None:
         span.ended_at = time.time()
         span.tokens_in = tokens_in
         span.tokens_out = tokens_out
         span.note = note
+        span.cost_usd = cost_usd
+        span.judge_score = judge_score
 
     @property
     def tokens_in(self) -> int:
@@ -47,3 +59,7 @@ class Trace:
     @property
     def tokens_out(self) -> int:
         return sum(s.tokens_out for s in self.spans)
+
+    @property
+    def cost_usd(self) -> float:
+        return sum(s.cost_usd for s in self.spans)

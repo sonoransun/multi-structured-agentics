@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import os
-from typing import Any
+from typing import Any, Callable
 
-from .base import Backend, Response
+from .base import Backend, Response, ToolCall
 
 DEFAULT_MODEL = "claude-opus-4-7"
 
@@ -43,6 +43,8 @@ class ClaudeBackend(Backend):
         system: str = "",
         max_tokens: int = 4096,
         cache_system: bool = True,
+        tools: list[dict] | None = None,
+        stream_callback: Callable[[str], None] | None = None,
     ) -> Response:
         if not self.available:
             raise RuntimeError("ClaudeBackend unavailable — no API key or SDK not installed")
@@ -57,20 +59,39 @@ class ClaudeBackend(Backend):
                 }
             ]
 
-        with self._client.messages.stream(
+        kwargs: dict[str, Any] = dict(
             model=self.model,
             max_tokens=max_tokens,
             system=system_param,
             thinking={"type": "adaptive"},
             messages=[{"role": "user", "content": prompt}],
-        ) as stream:
+        )
+        if tools:
+            kwargs["tools"] = tools
+
+        with self._client.messages.stream(**kwargs) as stream:
+            if stream_callback is not None:
+                for delta in stream.text_stream:
+                    stream_callback(delta)
             msg = stream.get_final_message()
 
         text = next((b.text for b in msg.content if b.type == "text"), "")
+        tool_calls: list[ToolCall] = []
+        for b in msg.content:
+            if getattr(b, "type", None) == "tool_use":
+                tool_calls.append(
+                    ToolCall(
+                        id=b.id,
+                        name=b.name,
+                        arguments=dict(b.input) if b.input else {},
+                    )
+                )
         return Response(
             text=text,
             tokens_in=msg.usage.input_tokens,
             tokens_out=msg.usage.output_tokens,
             cache_read_tokens=getattr(msg.usage, "cache_read_input_tokens", 0) or 0,
             backend=self.name,
+            tool_calls=tool_calls,
+            stop_reason=getattr(msg, "stop_reason", "") or "",
         )

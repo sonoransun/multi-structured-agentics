@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any
+from typing import Any, Callable
 
 from .base import Backend, Response
 
@@ -58,6 +58,8 @@ class TransformersBackend(Backend):
         system: str = "",
         max_tokens: int = 512,
         cache_system: bool = True,
+        tools: list[dict] | None = None,
+        stream_callback: Callable[[str], None] | None = None,
     ) -> Response:
         if not self.available:
             raise RuntimeError(
