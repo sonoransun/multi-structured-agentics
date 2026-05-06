@@ -26,7 +26,7 @@ class ResearcherAgent(Agent):
         try:
             resp = self.llm.complete(prompt, system=PERSONA, max_tokens=2048)
             answer = resp.text.strip()
-            trace.close(span, resp.tokens_in, resp.tokens_out, note="research")
+            trace.close(span, resp.tokens_in, resp.tokens_out, note="research", cost_usd=resp.cost_usd)
 
             if "summarize" in self.skills:
                 sk = self.skills["summarize"]

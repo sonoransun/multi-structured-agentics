@@ -13,11 +13,19 @@ least some task types. If not, the architecture isn't earning its keep.
 from .agents_only import run as run_agents_only
 from .skills_only import run as run_skills_only
 from .integrated import run as run_integrated
+from .debate import run as run_debate
 
 MODES = {
     "agents_only": run_agents_only,
     "skills_only": run_skills_only,
     "integrated": run_integrated,
+    "debate": run_debate,
 }
 
-__all__ = ["MODES", "run_agents_only", "run_skills_only", "run_integrated"]
+__all__ = [
+    "MODES",
+    "run_agents_only",
+    "run_skills_only",
+    "run_integrated",
+    "run_debate",
+]

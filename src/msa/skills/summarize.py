@@ -24,7 +24,7 @@ class SummarizeSkill(Skill):
         try:
             resp = self.llm.complete(text, system=SYSTEM, max_tokens=256)
             summary = resp.text.strip().split("\n")[0]
-            trace.close(span, resp.tokens_in, resp.tokens_out, note="summarize")
+            trace.close(span, resp.tokens_in, resp.tokens_out, note="summarize", cost_usd=resp.cost_usd)
             return SkillResult(output=summary, ok=True)
         except Exception as e:
             trace.close(span, note=f"error: {e}")

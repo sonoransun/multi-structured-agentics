@@ -80,3 +80,31 @@ def test_transformers_reports_availability_correctly():
     else:
         with pytest.raises(RuntimeError):
             b.complete("hi")
+
+
+def test_stub_stream_chunks_deterministic():
+    from msa.backends import StubBackend
+    chunks = []
+    resp = StubBackend().complete(
+        "summarize: hello world this is a test",
+        stream_callback=chunks.append,
+    )
+    assert len(chunks) >= 2, f"expected ≥2 chunks, got {len(chunks)}: {chunks}"
+    assert "".join(chunks) == resp.text, f"chunks didn't reassemble: {chunks!r} vs {resp.text!r}"
+
+
+def test_llm_facade_forwards_stream_callback():
+    from msa.core.llm import LLM
+    from msa.backends import StubBackend
+    llm = LLM(backend=StubBackend())
+    chunks = []
+    resp = llm.complete("summarize: test", stream_callback=chunks.append)
+    assert chunks
+    assert "".join(chunks) == resp.text
+
+
+def test_stub_no_callback_path_unchanged():
+    """Regression: ensure default (no callback) still works."""
+    from msa.backends import StubBackend
+    resp = StubBackend().complete("summarize: hello")
+    assert resp.text and resp.tokens_out > 0

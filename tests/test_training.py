@@ -106,3 +106,24 @@ def test_bandit_smoke(tmp_path: Path):
     assert "structured" in bias
     # The skill label should have a positive bias (it scored higher)
     assert any(v > 0 for v in bias["structured"].values())
+
+
+def test_bandit_folds_in_pref_bias(tmp_path: Path):
+    """`pref_bias` rows lift their (kind, label) bias before clipping."""
+    data_dir = tmp_path / "runs"
+    data_dir.mkdir()
+    # Equal scores → reward bias is 0; pref_bias is the only signal.
+    rows = [
+        {"task_id": "a", "kind": "structured", "prompt": "extract", "mode": "skills_only", "score": 0.5, "pref_bias": 0.4},
+        {"task_id": "b", "kind": "structured", "prompt": "extract", "mode": "agents_only", "score": 0.5},
+    ]
+    (data_dir / "x.jsonl").write_text("\n".join(json.dumps(r) for r in rows))
+
+    out = tmp_path / "bandit.json"
+    from msa.training import bandit
+
+    rc = bandit.main(["--data", str(data_dir), "--out", str(out)])
+    assert rc == 0
+    bias = json.loads(out.read_text())
+    skill_label = "skill:extract_json"
+    assert bias["structured"][skill_label] > 0

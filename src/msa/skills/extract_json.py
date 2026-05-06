@@ -40,7 +40,7 @@ class ExtractJSONSkill(Skill):
             resp = self.llm.complete(prompt, system=SYSTEM, max_tokens=1024)
             data = _parse_json(resp.text)
             ok = isinstance(data, dict)
-            trace.close(span, resp.tokens_in, resp.tokens_out, note="extract_json")
+            trace.close(span, resp.tokens_in, resp.tokens_out, note="extract_json", cost_usd=resp.cost_usd)
             return SkillResult(output=data, ok=ok, error=None if ok else "non-object output")
         except Exception as e:
             trace.close(span, note=f"error: {e}")

@@ -43,8 +43,15 @@ training = [
     "joblib>=1.3",
     "numpy>=1.24",
 ]
+# DPO / preference training (cross-encoder reranker + LoRA-DPO adapter)
+dpo = [
+    "trl>=0.9",
+    "datasets>=2.18",
+    "transformers>=4.40",
+    "torch>=2.2",
+]
 all = [
-    "msa[dev,local,embed,learn,training]",
+    "msa[dev,local,embed,learn,training,dpo]",
 ]
 
 [project.scripts]
@@ -53,6 +60,8 @@ msa-train-router = "msa.training.train_router:main"
 msa-bandit = "msa.training.bandit:main"
 msa-distill = "msa.training.distill:main"
 msa-lora = "msa.training.lora:main"
+msa-loop = "bench_loop:main"
+msa-dpo = "msa.training.dpo:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

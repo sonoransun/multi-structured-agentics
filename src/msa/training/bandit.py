@@ -46,9 +46,14 @@ def main(argv: list[str] | None = None) -> int:
 
     # (kind, label) -> [scores]
     bucket: dict[tuple[str, str], list[float]] = defaultdict(list)
+    # Optional preference bias accumulator: rows produced by a DPO/reranker
+    # pipeline may carry a `pref_bias` float per (kind, label). Sum it in.
+    pref: dict[tuple[str, str], list[float]] = defaultdict(list)
     for r in rows:
         label = _mode_to_label(r["mode"], r["kind"])
         bucket[(r["kind"], label)].append(r["score"])
+        if "pref_bias" in r:
+            pref[(r["kind"], label)].append(float(r["pref_bias"]))
 
     # Mean score per kind, used to center each label's bias relative to its peers.
     kind_means: dict[str, float] = {}
@@ -60,6 +65,10 @@ def main(argv: list[str] | None = None) -> int:
     for (kind, label), scores in bucket.items():
         mean = sum(scores) / len(scores)
         bias = (mean - kind_means[kind])  # ∈ roughly [-1, +1]
+        # Sum preference bias before clipping so it can pull labels up/down,
+        # but stays bounded by --clip.
+        if pref.get((kind, label)):
+            bias += sum(pref[(kind, label)]) / len(pref[(kind, label)])
         bias = max(-args.clip, min(args.clip, bias))
         bandit[kind][label] = round(bias, 4)
 

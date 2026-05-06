@@ -1,0 +1,10 @@
+{"question": "Maya has 5 apples and buys 3 more at the store. How many apples does she have now?", "answer": "Maya starts with 5 apples and buys 3 more, so 5 + 3 = 8. #### 8"}
+{"question": "A train travels 60 miles in 1 hour. At the same speed, how far does it travel in 4 hours?", "answer": "The train goes 60 miles per hour, so in 4 hours it travels 60 * 4 = 240 miles. #### 240"}
+{"question": "Jorge has 24 cookies and wants to share them equally among 6 friends. How many cookies does each friend get?", "answer": "There are 24 cookies and 6 friends, so each gets 24 / 6 = 4 cookies. #### 4"}
+{"question": "A rectangle is 7 meters long and 3 meters wide. What is its area in square meters?", "answer": "Area is length times width, so 7 * 3 = 21 square meters. #### 21"}
+{"question": "Sara saves $12 each week. How much will she have saved after 5 weeks?", "answer": "She saves $12 per week for 5 weeks, so 12 * 5 = 60 dollars. #### 60"}
+{"question": "A bag holds 18 marbles. If 7 are red and the rest are blue, how many marbles are blue?", "answer": "Total is 18 and red is 7, so blue is 18 - 7 = 11. #### 11"}
+{"question": "Tom runs 3 laps every morning for 5 days. How many laps does he run in total?", "answer": "He runs 3 laps a day for 5 days, so 3 * 5 = 15 laps. #### 15"}
+{"question": "A pizza is cut into 8 slices. If 3 people eat 2 slices each, how many slices remain?", "answer": "Three people eating 2 slices each is 3 * 2 = 6 slices eaten. Remaining is 8 - 6 = 2. #### 2"}
+{"question": "Lina has twice as many stickers as her brother. Her brother has 9 stickers. How many stickers do they have together?", "answer": "Lina has 2 * 9 = 18 stickers. Together they have 18 + 9 = 27. #### 27"}
+{"question": "A book has 120 pages. If you read 15 pages each day, how many days does it take to finish?", "answer": "Total pages is 120 and pages per day is 15, so 120 / 15 = 8 days. #### 8"}

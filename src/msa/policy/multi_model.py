@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import os
 from enum import Enum
+from typing import Callable, Sequence
 
 from ..backends import (
     Backend,
@@ -30,6 +31,10 @@ from ..backends import (
     TransformersBackend,
 )
 from ..core.llm import LLM
+
+# Reranker contract: given (prompt, candidates), return the chosen candidate.
+# Default behavior (None) is identity — pick the first candidate.
+Reranker = Callable[[str, Sequence[str]], str]
 
 
 class Role(str, Enum):
@@ -67,6 +72,8 @@ class MultiModelPolicy:
         self,
         skill_backend: Backend | None = None,
         agent_backend: Backend | None = None,
+        *,
+        reranker: Reranker | None = None,
     ):
         skill = skill_backend or _build(os.environ.get("MSA_BACKEND_SKILL"), prefer_local=True)
         agent = agent_backend or _build(os.environ.get("MSA_BACKEND_AGENT"), prefer_local=False)
@@ -74,9 +81,18 @@ class MultiModelPolicy:
             Role.SKILL: LLM(backend=skill),
             Role.AGENT: LLM(backend=agent),
         }
+        self.reranker = reranker
 
     def llm_for(self, role: Role) -> LLM:
         return self._llms[role]
+
+    def pick(self, prompt: str, candidates: Sequence[str]) -> str:
+        """Pick the best candidate via the configured reranker (or first if none)."""
+        if not candidates:
+            return ""
+        if self.reranker is None or len(candidates) == 1:
+            return candidates[0]
+        return self.reranker(prompt, candidates)
 
     def describe(self) -> dict[str, str]:
         return {role.value: llm.backend.name for role, llm in self._llms.items()}
